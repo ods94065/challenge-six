@@ -233,10 +233,10 @@
   `(:html
     (:head (:title "Report"))
     (:body :bgcolor "white"
-      (when (gethash (reread 'show-report) ,data)
+      (when (gethash :show-report ,data)
 	(with-hash-values ,data (report-title query results names rpt-has-errs)
 	  (html (:display-report query results names report-title rpt-has-errs 100))))
-      (when (gethash (reread 'prompt-crit) ,data)
+      (when (gethash :prompt-crit ,data)
 	(with-hash-values ,data (report-fields crit-errors)
 	  (html (:criteria-prompts report-fields crit-errors))))
       ; Bottom navigation
@@ -278,7 +278,7 @@
 	    (let ((report-title (trim-to-string ReportTitle)))
 	      (hash-insert report-title data))))))
 
-    (when (and show-report (null (gethash 'errors data)))
+    (when (and show-report (null (gethash :errors data)))
       (let ((query (gen-report-query *user-id* rpt-id 100 0))
 	    (rpt-has-errs))
 	(or (hash-insert query data)

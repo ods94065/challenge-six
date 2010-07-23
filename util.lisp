@@ -27,6 +27,9 @@
 	#'(lambda (&rest args)
 	    (reduce #'funcall fs :from-end t :initial-value (apply f1 args))))))
 
+(defun key-symb (&rest args)
+  (values (intern (apply (compose #'string-upcase #'mkstr) args) :keyword)))
+
 (defmacro <++ (&rest args) `(concatenate 'string ,@args))
 
 (defun group (src n)
@@ -40,12 +43,12 @@
 	(when src (group-rec src nil)))))
 
 (defmacro hash-insert (var table)
-  `(setf (gethash (reread ',var) ,table) ,var))
+  `(setf (gethash (key-symb ',var) ,table) ,var))
 
 (defmacro multiple-value-to-hash-table (table (&rest keys) form)
   `(multiple-value-bind ,keys ,form
      ,@(mapcar #'(lambda (k) 
-		   `(setf (gethash (reread ',k) ,table) ,k))
+		   `(setf (gethash (key-symb ',k) ,table) ,k))
 	       keys)))
 
 (defmacro with-gensyms ((&rest gensyms) &body body)
@@ -54,20 +57,15 @@
 
 (defmacro with-hash-values (table (&rest keys) &body body)
   `(let ,(mapcar #'(lambda (k) 
-		     `(,k (gethash (reread ',k) ,table)))
+		     `(,k (gethash (key-symb ',k) ,table)))
 		 keys)
      ,@body))
 
 (defmacro with-assoc (alist (&rest keys) &body body)
   `(let ,(mapcar #'(lambda (k) 
-		     `(,k (cdr (assoc (reread ',k) ,alist))))
+		     `(,k (cdr (assoc (key-symb ',k) ,alist))))
 		 keys)
      ,@body))
-
-(defun xform-alist-keys-to-my-package (alist)
-  (mapcar #'(lambda (p)
-	      (cons (intern (symbol-name (car p))) (cdr p)))
-	  alist))
 
 (defun yes-no-undef (s) (when s (if (equalp s "yes") :yes :no)))
 
@@ -113,7 +111,7 @@
   (intern s :challenge-six))
 
 (defun zip-select-results (results columns)
-  (let ((columns-as-symbols (mapcar (compose #'intern #'string-upcase) columns)))
+  (let ((columns-as-symbols (mapcar #'key-symb columns)))
     (mapcar #'(lambda (tuple)
 		(mapcar #'cons columns-as-symbols tuple))
 	    results)))
