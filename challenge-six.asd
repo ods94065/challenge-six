@@ -7,12 +7,16 @@
     :maintainer "Owen Smith"
     :license "BSD"
     :description "Challenge 6 solution."
-    :long-description "Solution to http://c2.com/cgi/wiki?ChallengeSixVersusFpDiscussion in Lisp."
+    :long-description "Solution to http://c2.com/cgi/wiki?ChallengeSixVersusFpDiscussion in Common Lisp."
     :components
-    ((:file "packages")
-     (:file "login" :depends-on ("packages" "util"))
-     (:file "report" :depends-on ("packages" "util"))
-     (:file "report-list" :depends-on ("packages" "util"))
-     (:file "start-site" :depends-on ("packages" "util"))
-     (:file "util" :depends-on ("packages")))
-    :depends-on (:html :hunchentoot :split-sequence :clsql :clsql-sqlite3 :chronicity :ironclad))
+    ((:module "base" :pathname "src/lisp"
+	      :components
+	      ((:file "packages")
+	       (:file "login" :depends-on ("packages" "util" "tags"))
+	       (:file "report" :depends-on ("packages" "util" "tags"))
+	       (:file "report-list" :depends-on ("packages" "util" "tags"))
+	       (:file "start-site" :depends-on ("packages" "util"))
+	       (:file "tags" :depends-on ("packages" "util"))
+	       (:file "util" :depends-on ("packages")))))
+    :depends-on
+    (:chronicity :clsql :clsql-sqlite3 :hunchentoot :ironclad :split-sequence :yaclml))

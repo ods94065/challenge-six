@@ -7,20 +7,29 @@
 	(pathname (<++ dn "/"))
 	(pathname dn))))
 
+(defvar *demo-app*)
+
 (defun start-site (root-dir port)
   (let* ((real-root-dir (dir-to-pname root-dir))
-	 (msg-log-pname (make-pathname :name "msg" :type "log" :defaults real-root-dir))
-	 (access-log-pname (make-pathname :name "access" :type "log" :defaults real-root-dir))
-	 (db-pname (make-pathname :name "demo" :type "db" :defaults real-root-dir)))
+	 (log-dir (ensure-directories-exist (merge-pathnames (dir-to-pname "var/log") real-root-dir)))
+	 (data-dir (ensure-directories-exist (merge-pathnames (dir-to-pname "var/lib") real-root-dir)))
+	 (msg-log-pname (make-pathname :name "msg" :type "log" :defaults log-dir))
+	 (access-log-pname (make-pathname :name "access" :type "log" :defaults log-dir))
+	 (db-pname (make-pathname :name "demo" :type "db" :defaults data-dir)))
     (setf *message-log-pathname* msg-log-pname)
     (setf *access-log-pathname* access-log-pname)
     (setf *demo-db-path* (namestring db-pname))
+    (format t "Message log is ~S" *message-log-pathname*)
     (init-demo-db)
     (with-demo-db
       (drop-test-tables)
       (create-test-tables)
       (insert-test-data))
-    (start (make-instance 'acceptor :port port))))
+    (setf *demo-app* (make-instance 'easy-acceptor
+				    :port port
+				    :access-log-destination access-log-pname
+				    :message-log-destination msg-log-pname))
+    (start *demo-app*)))
 
 #.(locally-enable-sql-reader-syntax)
 

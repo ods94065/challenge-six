@@ -1,0 +1,199 @@
+
+This is an ASCII data dump for those who may not have
+MS-Access or Jet tools. Note that null fields are
+empty spots in the data. (Personally, I don't like
+nulls, but there is no database-wide way to turn
+them off.) The first row of each table segment
+contains the field names. The framework tables
+are given first, then the sample data tables.
+You may need to remove the dollar signs from
+the "currency" fields for some importers.
+
+
+Reports table:
+
+"ReportID","ReportTitle","rptSequence","SelectClause","FromClause","WhereClause","GroupByClause","OrderByClause"
+1,"Customers",2.00,"*","contacts","contactID in (select clientRef from orders)",,"lastname,company"
+2,"Catalog",1.00,"*","items",,,"descr"
+3,"Test Report",3.00,"*","TestData",,,"testid"
+4,"Ordered Items",4.00,"FirstMI, LastName, OrderID, Descr as Description, Qty, ListPrice","Contacts, Orders, OrderDetail, Items","Orders.ClientRef = Contacts.ContactID AND OrderDetail.OrderRef = Orders.OrderID AND Orders.ClientRef = Contacts.ContactID AND OrderDetail.OrderRef = Orders.OrderID AND OrderDetail.ItemRef = Items.ItemID",,"OrderID, Descr"
+5,"Order Totals",5.00,"OrderRef  as [Order ID], SUM(Listprice) as Total","OrderDetail INNER JOIN Items ON OrderDetail.ItemRef = Items.ItemID",,"OrderRef","OrderRef"
+
+
+ReportCriteria table:
+
+"ItemID","ReportRef","FldName","FldTitle","FmtType","Width","DefaultVal","Sequence","KeepWithPrior","Required","Comparer","TheList","FmtCodes"
+1,1,"FirstMI","First Name","t",25,,1.00,0,0,,,
+2,1,"LastName","Last Name","t",25,,2.00,0,0,,,
+3,1,"Company","Company","t",25,,3.00,0,0,,,
+4,1,"Zipcode","From Zip Code","t",5,"00000",4.00,0,0,">=",,
+5,1,"Zipcode","To","t",5,"99999",5.00,1,0,"<=",,
+6,2,"ItemID","Item ID","n",,,1.00,0,0,,,
+7,2,"Descr","Description","t",50,,2.00,0,0,,,
+8,2,"ListPrice","Lowest Price","n",14,,3.00,0,0,">=",,
+9,2,"ListPrice","Highest Price","n",16,,4.00,1,0,"<=",,
+10,2,"Alias","Alias","t",,,5.00,0,0,,,
+11,2,"InStock","In Stock","y",0,,6.00,0,0,,,
+12,3,"TestID","Test ID","N",0,,1.00,0,0,,,
+13,3,"TestText","Test Text","T",0,,2.00,0,0,,,
+14,3,"TestNum","Test Number","N",0,,3.00,0,0,,,
+15,3,"TestDate","Test Date From","D",0,,4.00,0,0,">=",,
+16,3,"TestBool","Test Boolean","Y",0,,5.00,0,0,,,
+17,3,"TestList","Test List","L",0,,6.00,0,0,,"AAA, BBB, CCC, DDD",
+18,4,"FirstMI","First Name","t",0,,1.00,0,0,,,
+19,4,"LastName","Last Name","t",0,,2.00,0,0,,,
+20,4,"OrderID","Order ID","n",0,,3.00,0,0,,,
+21,4,"Descr","Description","t",0,,4.00,0,0,,,
+22,4,"Qty","Qty. From","n",7,,5.00,0,0,">=",,
+23,4,"Qty","To","n",8,,6.00,1,0,"<=",,
+24,4,"ListPrice","Price From","n",10,,7.00,0,0,">=",,
+25,4,"ListPrice","To","n",12,,8.00,1,0,"<=",,
+26,5,"OrderRef","OrderID","n",0,,1.00,0,0,,,
+29,3,"TestDate","To","D",0,,4.50,1,0,"<=",,
+30,2,"SupplierRef","Supplier ID","t",0,,4.50,0,0,,,
+
+
+UserFields table:
+(You may not need to bother loading data to this
+table. It simply remembers the last entries.)
+
+"userID","rptItemID","fldValue"
+1,10,""
+1,11,"(either)"
+1,12,""
+1,13,""
+1,14,""
+1,15,"4/1/1996"
+1,16,"(either)"
+1,17,"(any)"
+1,1,""
+1,2,"z"
+1,3,""
+1,4,"00000"
+1,5,"99999"
+1,18,""
+1,19,""
+1,20,""
+1,21,""
+1,22,""
+1,23,""
+1,24,""
+1,25,""
+1,26,"6"
+1,27,"30"
+1,28,"80"
+1,6,""
+1,7,"an"
+1,8,""
+1,9,"100"
+1,29,""
+1,30,""
+
+
+Contacts table:
+
+"ContactID","FirstMI","LastName","Address1","Address2","City","State_Province","ZipCode","Country","Phone","Company","Dept","OtherContact"
+1,"Fred J.","Smith","123 Oak Street.",,"Penville","NC","28642",,"456-123-4567",,,
+2,"Sharon","Rogers","473 Yiz lane","Suite 204","Las Vegas","NV","89131",,"424-235-1244 X24","Zynter Products","Sales",
+3,"Tedd","Marginson","12 Foo Dr.",,"Bartown","CA","91847",,,"Yizzer Products",,"foo@bar.com"
+4,"Han","Tarsa",,,"Tampa","FL","33618",,"443-142-1121","Cannit, Inc.",,
+5,"Lisa M.","Candor","4425 Lake Dr.",,"Pleasonton","CO","80235",,,,,
+6,"Fifi",,,,"Orangevale","CA","95662",,"343-224-4324","Yazz, Inc.","Sales","fifi@yazz.biz"
+7,"Bendle","Carmon","8188 Hog St.",,"Bloomington","TX","77098",,,"Jay's Services",,
+8,"Bud W.","Gulperson","1730 Harp Road",,"Hagglesville","OK","63632",,,,,
+9,"Samuel","Harris","3242 Ada Drive",,"Mappington","OR","97233",,,,,
+10,"Panthon L.","Zamphire","23 K St.",,"Cleveland","OH","44126",,,,,
+11,"Bertha","Han","4213 17th. St.",,"Parkton","IL","60101",,,,,
+12,"Lin","Pender","1804 45th St.",,"Salt Lake City","UT","84118",,,,,
+13,"Gill","Bates","One Sicromoft Way","Suite 665","Seattle","WA","98198",,,,,
+14,"Haspa W.","Torminony","646 South Main St.",,"New York","NY","11427",,,,,
+15,"Mike R.","Rabo","44 N. Lincoln Ave.",,"Tampa","FL","33619",,,,,
+16,"Harvey","Slaton","437 Elm St.",,"Boston","MA","02120",,,,,
+
+
+Items table:
+
+"ItemID","Descr","ListPrice","SupplierRef","Alias","InStock"
+1,"Heart Wallpaper, 50ft.",$10.00,2,,0
+2,"Zantex Floor Clean",$6.50,3,,1
+3,"Horka Modem",$49.95,4,"YH-2004",1
+4,"Printer Paper (50 sheets)",$6.00,2,,0
+5,"Thin String",$5.00,4,,1
+6,"Fat String",$8.00,6,"7473262",0
+7,"Plastic Office Plant",$26.80,4,,1
+8,"Air Filter, fits size C",$18.00,6,,1
+9,"Correction Fluid",$4.99,3,"PV33-01",0
+10,"10-Inch Fan",$19.00,2,,1
+11,"Heavy-duty Sun Block",$7.95,6,,0
+12,"5mm Bolt",$0.50,2,"KS3928",1
+13,"Daisy Hat",$20.00,3,,1
+14,"Fancy Pen/Pencil Set",$16.75,6,"ST-045",0
+15,"Lint Brush",$9.00,2,,1
+16,"Janitorial Service - 1 month",$200.00,7,,1
+
+
+OrderDetail table:
+
+"OrderDetailID","OrderRef","ItemRef","Qty","Note"
+1,1,16,1.00,
+2,5,15,1.00,
+3,1,14,1.00,
+4,5,13,3.00,
+5,1,12,1.00,
+6,2,11,1.00,
+7,2,10,1.00,
+8,2,9,10.00,"Could not read fax clear. Please check this."
+9,3,8,1.00,
+10,3,7,1.00,
+11,4,6,4.00,
+12,5,2,1.00,
+13,5,1,1.00,
+14,6,2,1.00,
+15,6,12,1.00,
+16,6,13,1.00,
+17,6,14,1.00,
+18,7,15,2.00,"3 note included, only 2 in stock."
+19,7,16,1.00,
+20,7,1,1.00,
+21,7,2,1.00,
+22,7,3,3.00,
+23,7,4,1.00,
+24,7,5,1.00,
+25,7,6,50.00,
+26,8,7,1.00,
+27,8,8,1.00,
+28,8,9,1.00,
+29,8,10,4.00,
+30,9,11,1.00,
+31,9,12,1.00,
+32,9,13,1.00,
+33,9,14,5.00,
+34,9,15,1.00,
+35,9,16,1.00,
+36,9,1,10.00,
+
+
+Orders table:
+
+"OrderID","OrderDate","ClientRef","ShipToRef","isShipped"
+1,1/2/01 0:00:00,1,1,1
+2,2/19/01 0:00:00,14,14,1
+3,5/13/01 0:00:00,8,8,1
+4,6/1/01 0:00:00,1,1,0
+5,6/1/01 0:00:00,14,14,0
+6,6/2/01 0:00:00,8,8,0
+7,6/3/01 0:00:00,9,9,0
+8,6/4/01 0:00:00,10,1,0
+9,6/4/01 0:00:00,13,13,0
+
+
+TestData table:
+
+"TestID","TestText","TestNum","TestDate","TestBool","TestList"
+1,"Lark",12.50,3/4/95 0:00:00,0,"AAA"
+2,"Park",3.50,7/1/97 0:00:00,0,"BBB"
+3,"Dark",0.00,4/4/96 0:00:00,1,"CCC"
+4,"Spark",-3.00,1/1/01 0:00:00,0,"AAA"
+5,"Hark",2.48,12/31/99 0:00:00,1,"BBB"
+
+(end)

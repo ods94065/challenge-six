@@ -1,5 +1,4 @@
 (in-package :cl-user)
 (defpackage :challenge-six
-  (:use :cl :com.gigamonkeys.html :hunchentoot :split-sequence :clsql)
+  (:use :cl :clsql :hunchentoot :split-sequence :yaclml)
   (:export :start-site))
-
