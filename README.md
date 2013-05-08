@@ -9,10 +9,10 @@ other considerations are not considered in this example.
 ## Problem and Approach
 
 The original source code implements a simple reporting tool in Visual
-Basic. The user may log in and run reports with a user-specified set
-of search variables. There are no fancy algorithms here, no elaborate
-data structures: just simple code hooking up a dynamic query mechanism
-to a web page.
+Basic and ASP. The user may log in and run reports with a
+user-specified set of search variables. There are no fancy algorithms
+here, no elaborate data structures: just simple code hooking up a
+dynamic query mechanism to a web page.
 
 The original code accepts a number of design and maintainability
 limitations in the name of convenience and less code. It uses global
@@ -59,15 +59,17 @@ The easiest way to run the example is:
    number with whatever port you desire). This creates the database
    and starts up the server.
 
-7. Fire up a web browser and go to http://localhost:8081/login. You
+7. Fire up a web browser and go to
+   [http://localhost:8081/login](http://localhost:8081/login]). You
    should see a simple login page. Enter `test` as the user and
-   `11111111` as the password, and you should see the report list page.
+   `11111111` as the password, and you should see the report list
+   page.
  
 ## Analysis
 
 For the analysis, I stripped all single-line and multi-line comments, as
 well as blank lines and docstrings. I didn't bother to clean up minor
-discrepancies in code and names, though they are certainly there.
+discrepancies in code and names.
 
 I'll start with the meat: the comparison of the implementation of
 `/report/run`. Comparing `report.lisp` to `REPORT.ASP` yields:
@@ -102,7 +104,7 @@ comparing the two solutions:
   not considered as bad in terms of style as multiple-statement
   one-liner functions tend to be in procedural programming languages.
 * I also didn't take into account that Lisp parentheses are used to
-  close of code blocks instead of keywords &ndash; This decreases the
+  close of code blocks instead of keywords. This decreases the
   Lisp word count, but tends to increase the number of characters
   since there are a lot of parentheses (see below). Depending on how
   you look at it, this could be considered a distraction from the
@@ -122,7 +124,7 @@ overall. For this, I exclude two Lisp files, `start-site.lisp` and
 and will not contribute useful information to the analysis at hand.
 
 <table>
-  <tr><th>&nbsp;</th><th>ASP</th><th>Lisp</th></tr>
+  <tr><th>&nbsp;</th><th>VBasic</th><th>Lisp</th></tr>
   <tr><td>Lines</td><td>383</td><td>351</td></tr>
   <tr><td>Words</td><td>1676</td><td>1519</td></tr>
   <tr><td>Characters</td><td>12848</td><td>14033</td></tr>
@@ -242,7 +244,7 @@ where you want or need to the variable name to be different, or you
 want to plug in an arbitrary form to calculate the value.)
 
 A few more shortcuts were taken to cut down on the noise: I use `<++`
-as a shortcut to the clumsy `(concatenate `string ...)` form, and
+as a shortcut to the clumsy `(concatenate 'string ...)` form, and
 `query-zip` as a simple way to run a query and return the results in
 rows of associative lists.
 
@@ -292,7 +294,7 @@ to some pretty powerful one-liners:
 
 This takes a string of comma-separated items, splits them up into a
 list, trims each item in the list (`mapcar` is covered in detail
-below), adds "(any)" to the front of the list, and returns the whole
+below), adds `(any)` to the front of the list, and returns the whole
 shebang.
 
 Obviously, this technique, taken too far, can lead to madness, and
@@ -438,6 +440,16 @@ and more in terms of transforming sets of data and chaining operations
 together. But even in an example with only modest demands on data
 processing, such as the example given, Lisp can still help you do more
 with less code.
+
+The surest sign that functional programming techniques are valuable is
+their inclusion in modern programming languages. C++'s Standard
+Template Library algorithms are written in a form which encourages
+high-level algorithmic transformations of collection
+objects. Javascript, Python, and Ruby all include closures and include
+`map` and `reduce` functions as part of their standard library. Python
+also defines list comprehensions and dictionary comprehensions, which
+are more efficient versions of the mapping operations above that still
+retain much of the syntactic terseness.
 
 Note that the critique that spawned this project aimed at Lisp as an
 examplar of the functional programming paradigm. However, that's a
