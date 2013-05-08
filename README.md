@@ -1,10 +1,15 @@
 # Challenge Six
 
 The purpose of this exercise is to show whether implementing a
-real-world example in Common Lisp offers significant reductions in
-source code size from a more mainstream programming language like
-Visual Basic. Performance, compiled code size, code difficulty, and
-other considerations are not considered in this example.
+traditional business application in Common Lisp, using functional
+programming techniques, offers significant reductions in source code
+size from a more traditional imperative and procedural programming
+approach. Performance, compiled code size, code difficulty, and other
+considerations are not considered in this example.
+
+The exercise was proposed in
+[http://c2.com/cgi/wiki?ChallengeSixVersusFpDiscussion](the
+ChallengeSixVersusFpDiscussion on Ward Cunningham's Wiki).
 
 ## Problem and Approach
 
@@ -17,15 +22,23 @@ dynamic query mechanism to a web page.
 The original code accepts a number of design and maintainability
 limitations in the name of convenience and less code. It uses global
 variables liberally, interleaves business logic and presentation, and
-uses a totally unstructured approach to data that comes from
-accessing SQL cursor objects directly &ndash; all aspects of web
-appliaction design that I would not endorse if approaching a new
-project on my own terms. Fixing these aspects, however, would increase
-the size of the codebase substantially, and give limited insight into
-the advantages or disadvantages of Lisp. Therefore, the Common Lisp
-implementation also adheres to this structure, which gets us
-relatively close to an apples-to-apples comparison. From this basis,
-I take whatever functional and syntactic benefits Lisp allows.
+uses a totally unstructured approach to data that comes from accessing
+SQL result sets directly &ndash; all aspects of web appliaction design
+that I would not endorse if approaching a new project on my own
+terms. Fixing these aspects, however, would increase the size of the
+codebase substantially, and give limited insight into the advantages
+or disadvantages of Lisp. Therefore, the Common Lisp implementation
+also adheres to this structure, which gets us relatively close to an
+apples-to-apples comparison. From this basis, I take whatever
+functional and syntactic benefits Lisp allows.
+
+Like I believe many Lisp programmers do, I have attempted to use
+functional patterns and utilities judiciously, but I have by no means
+attempted to make my code completely pure or functional. Comparisons
+with other functional programming languages like Haskell, which
+actually is quite a bit more streamlined than Lisp when it comes to
+functional programming features, could yield additional interesting
+fruit.
 
 ## Source Code Structure
 
@@ -151,14 +164,17 @@ think it is more productive to focus on the coding constructs
 themselves, and look at the Lisp features that offer ways of
 streamlining and simplifying code expressions.
 
-## Macros and HTML Generation
+## Macros and Syntax Manipulation
 
-Many of the benefits I get in terms of reducing code come from
-use of Lisp's macro facility. Macros operate before the code is
-compiled, and the values that they are passed are Lisp forms,
-represented as list data. This distinguishes them from most macro
-facilities in programming languages, where the values they are passed
-are simply strings passed directly from the lexer.
+Many of the benefits I get in terms of reducing code come from use of
+Lisp's macro facility. Macros operate before the code is compiled, and
+the values that they are passed are Lisp forms, represented as list
+data. This distinguishes them from most macro facilities in
+programming languages, where the values they are passed are simply
+strings passed directly from the lexer. Macros are effectively used to
+add new syntactic constructs to Lisp.
+
+### HTML Generation
 
 The _HTML generator macros_ from the `yaclml` library make it possible
 to interleave HTML tags and Lisp code in a way that is quite natural
@@ -172,13 +188,18 @@ benefits:
 
 1. It allows the attributes used by the elements to be checked at
    compile time.
-2. It means that what actually gets compiled is efficient printing
-   code substituted for the HTML elements at compile time. In other
-   words, using the HTML generator macros incurs no runtime overhead.
-3. It embeds quite naturally into the existing tree structure of Lisp
-   code and syntax, and even provides additional terseness over HTML
-   templates when used in a markup-heavy situation (which is certainly
-   the case in this example).
+2. It transforms at compile time into efficient printing code
+   substituted for the HTML generator calls. Using the HTML generator
+   macros incurs no runtime overhead.
+3. It provides additional terseness over HTML templates when used
+   in a markup-heavy situation (which is certainly the case in this
+   example).
+4. It embeds quite naturally into the existing tree structure of Lisp
+   code and syntax.
+
+The last point is important. It means that YACLML is effectively
+extending Lisp's syntax with constructs that apply specifically to the
+web programming domain.
 
 Using HTML generators, however, is an approach that only makes sense
 in certain projects. Larger web development projects are probably
@@ -186,8 +207,8 @@ going to want to use markup-based templates for presentation so that
 web designers can work with them, and so that there is a clearer
 demarcation between business logic and presentation.
 
-The main disadvantage of using `yaclml` in this example goes, is that
-it does not lend itelf very easily to functional programming. Note the
+The main disadvantage of using `yaclml` in this example is that it
+does not lend itelf very easily to functional programming. Note the
 prevalence of `dolist` iteration in the code instead of functional
 constructs like `mapcar` or `reduce`. This is because we are not
 building up a structure to transform or map over &ndash; we are simply
@@ -201,17 +222,50 @@ them, like `<center` and `<simple-page`. These are different than
 functions because they operate before the code is compiled, and the
 values that they are passed are Lisp forms as list data.
 
-## Simplifying Data Access and Other Shortcuts
+### Hunchentoot Handlers
+
+Hunchentoot, the library that provides the web server implementation
+for this example, uses macros to define syntactic constructs of its
+own. The `define-easy-handler` construct looks like a function
+definition but adds HTTP request/response handling and URL routing to
+the body of the function. Input parameters are covered with special
+forms at the top of the function.
+
+I extend this concept to a construct called `define-demo-handler`
+which not only does all of the above, it covers establishing a DB
+connection and handling login as well. Every request handler that is
+defined with this macro picks up those capabilities for free.
+
+The difference between this and simple function decomposition is its
+ability to bind variables for the body of the construct to use, and
+change the syntax of the construct. For normal functions and macros,
+the function name would simply be given as the second argument to
+`defun` or `defmacro`, but in this case the URL routing is so
+important to the operation of the handler that it is given special
+billing. Query parameters are handled in a separate form so that it's
+clear that they're distinct from the name and URL. They are directly
+bound to variables that get used in the following code.
+
+Again, the purpose of these constructs is to provide a mechanism for
+implementing handlers that is easy to use and designed specifically
+for its problem domain.
+
+### Simplifying Data Access and Other Shortcuts
+
+Not all macros are designed as domain-specific extensions. Sometimes
+macros simply provide cheap ways of streamlining code.
 
 In the Lisp implementation, I use one of the simplest constructs Lisp
 has for manipulating data: associative lists, or simply unordered
 lists of key-value pairs. Lookup is slow, but for small collections
-like this demo uses, it's acceptable.
+like this demo uses, it's acceptable. One of the problems with
+associative lists, though, is that the syntax for manipulating them in
+Common Lisp is clumsy: `(cdr (assoc :key alist))` accesses an item in
+the list.
 
-I use a peculiar technique to avoid the clumsy `(cdr (assoc :key
-alist))` form that is used for associative list access. In fact, the
-technique I use arguably does even better than the `rs["key"]` form
-which is used in the Visual Basic example. The macro `with-assoc`
+Using macros, I define a streamlined way of accessing items in an
+associative list that arguably does even better than the `rs["key"]`
+form which is used in the Visual Basic example. The macro `with-assoc`
 takes an associative list, and a list of variables to be bound with
 values from the associative list. The twist is: the _names of the
 variables themselves_ form the keys we use when we look up the values!
@@ -301,19 +355,19 @@ Obviously, this technique, taken too far, can lead to madness, and
 people will have different tolerance levels as to how many layers of
 composition they can take in when reading code. Newcomers to
 functional programming may well have trouble reading lines of code
-like this, since they are after all doing a lot! But with the right
-building blocks, the resulting code can be very compact and
-approachable.
+like this, since they are after all doing a lot, and data flows from
+right to left. But with the right building blocks, the resulting code
+can be very compact and approachable.
 
 ## Higher-Level Programming
 
-### Mapping Functions
+### Higher-Order Functions
 
 The places in our example where functional programming techniques help
 the most are actually in the utilities themselves, in
-`util.lisp`. Lisp offers several high-level functional constructs that
-make transforming collections of items easier. In this example, I use
-just one of them: `mapcar`.
+`util.lisp`. Lisp offers several higher-order facilities that make
+transforming collections of items easier. In this example, I use just
+one of them: `mapcar`.
 
 `mapcar` provides an efficient way to transform one list of stuff into
 another, where there is a 1-1 mapping of items in the input to
@@ -419,6 +473,15 @@ expression is evaluated! This is the power of _closures_ at work, and
 can help avoid the kind of dumb errors you run into when threading
 some set of variables from one function to another.
 
+## TODOs
+
+* The insertion of form data directly into the query string leaves us
+  open to SQL injection. I've used an escaping function on input
+  parameters to try to ameliorate this, but a cleaner and
+  better-performing approach would use prepared statements and
+  parameterized queries. Unfortunately, `clsql` does not seem to
+  support this at present.
+
 ## Conclusion
 
 I've shown that, at least notionally, you can write more compact
@@ -427,38 +490,17 @@ examples. The abstractions and utilities developed in the Common Lisp
 implementation can yield great benefits at scale as well.
 
 Beyond this, I've shown some of the features of Lisp that contribute
-to these benefits: syntactic manipulation and compile-time processing.
+to these benefits: syntactic manipulation and functional programming.
 I've also covered some of the other benefits that functional
 programming provides: correctness and safety of iteration, better
-reusability of code, and clearer code intentions when reading it.
+reusability of code, and clearer code intentions when reading code.
 
 These are several ways, both big and little, that Lisp, and functional
-programming, can improve programmer productivity. Ultimately, the goal
-is to help programmers move up the abstraction ladder, working less in
-the straightforward but often-messy details of iterating through data
-and more in terms of transforming sets of data and chaining operations
-together. But even in an example with only modest demands on data
-processing, such as the example given, Lisp can still help you do more
-with less code.
+programming, can improve programmer productivity. Lisp helps
+programmers move up the abstraction ladder, away from the
+straightforward but often-messy details of iterating through data,
+towards higher-order function composition and data transformation, and
+towards syntactic extensions that support the problem domains at hand.
 
-The surest sign that functional programming techniques are valuable is
-their inclusion in modern programming languages. C++'s Standard
-Template Library algorithms are written in a form which encourages
-high-level algorithmic transformations of collection
-objects. Javascript, Python, and Ruby all include closures and include
-`map` and `reduce` functions as part of their standard library. Python
-also defines list comprehensions and dictionary comprehensions, which
-are more efficient versions of the mapping operations above that still
-retain much of the syntactic terseness.
-
-Note that the critique that spawned this project aimed at Lisp as an
-examplar of the functional programming paradigm. However, that's a
-false premise, as you can readily see from the code that was
-written. Common Lisp is a multiparadigm language &ndash; in fact, it
-may be the most protean programming language yet invented!  Like I
-believe many Lisp programmers do, I have attempted to use functional
-patterns and utilities judiciously, but I have by no means attempted
-to make my code completely pure or functional. Comparisons with other
-functional programming languages like Haskell, which actually is quite
-a bit more streamlined than Lisp when it comes to functional
-programming features, could yield additional interesting fruit.
+Even in an example with only modest programming demands, such as the
+example given, Lisp can still help you do more with less code.
