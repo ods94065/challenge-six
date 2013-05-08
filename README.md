@@ -88,7 +88,7 @@ I'll start with the meat: the comparison of the implementation of
 `/report/run`. Comparing `report.lisp` to `REPORT.ASP` yields:
 
 <table>
-  <tr><th>&nbsp;</th><th>ASP</th><th>Lisp</th></tr>
+  <tr><th>&nbsp;</th><th>VBasic</th><th>Lisp</th></tr>
   <tr><td>Lines</td><td>311</td><td>220</td></tr>
   <tr><td>Words</td><td>1405</td><td>1012</td></tr>
   <tr><td>Characters</td><td>10741</td><td>9101</td></tr>
