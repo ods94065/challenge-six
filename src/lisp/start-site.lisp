@@ -1,6 +1,10 @@
+;;;; start-site.lisp
+;;;; Commands to start and stop the demo web server.
+
 (in-package :challenge-six)
 
 (defun dir-to-pname (dn)
+  "Convert a string representing a directory to a valid Lisp pathname."
   (let ((len (length dn)))
     (if (and (> len 0)
 	     (not (eql (char dn (- len 1)) #\/)))
@@ -9,7 +13,13 @@
 
 (defvar *demo-app*)
 
-(defun start-site (root-dir port)
+(define-condition demo-app-error (error)
+  (message :initarg :message :reader demo-app-error-message))
+
+(defun init-app (root-dir port)
+  "Initialize the web server, but don't start it.
+
+  This function also wipes and recreates the demo database."
   (let* ((real-root-dir (dir-to-pname root-dir))
 	 (log-dir (ensure-directories-exist (merge-pathnames (dir-to-pname "var/log") real-root-dir)))
 	 (data-dir (ensure-directories-exist (merge-pathnames (dir-to-pname "var/lib") real-root-dir)))
@@ -18,7 +28,7 @@
 	 (db-pname (make-pathname :name "demo" :type "db" :defaults data-dir)))
     (setf *message-log-pathname* msg-log-pname)
     (setf *access-log-pathname* access-log-pname)
-    (setf *demo-db-path* (namestring db-pname))
+    (setf *demo-db-path* (namestring (truename db-pname)))
     (format t "Message log is ~S" *message-log-pathname*)
     (init-demo-db)
     (with-demo-db
@@ -28,19 +38,65 @@
     (setf *demo-app* (make-instance 'easy-acceptor
 				    :port port
 				    :access-log-destination access-log-pname
-				    :message-log-destination msg-log-pname))
-    (start *demo-app*)))
-
-#.(locally-enable-sql-reader-syntax)
+				    :message-log-destination msg-log-pname))))
 
 (defun init-demo-db ()
+  "Create the demo database."
   (initialize-database-type :database-type :sqlite3)
   (create-database (list *demo-db-path*) :database-type :sqlite3))
 
+(defun start-server ()
+  "Start the web server. Must be initialized with init-app or start-app first."
+  (when (not (boundp '*demo-app*))
+      (error 'demo-app-error "The demo app has not yet been initialized."))
+  (start *demo-app*))
+
+(defun stop-server ()
+  "Stop the web server. Must have been initialized with init-app or start-app
+   and be running."
+  (when (not (boundp '*demo-app*))
+      (error 'demo-app-error "The demo app has not yet been initialized."))
+  (stop *demo-app*))
+
+(defun restart-server ()
+  "Restarts the web server. Must have been initialized with init-app or start-app
+   and be running." 
+  (when (not (boundp '*demo-app*))
+      (error 'demo-app-error "The demo app has not yet been initialized."))
+  (stop-server)
+  (start-server))
+
+(defun start-app (root-dir port)
+  "Initialize and start the web server. 
+
+   As a demo, the database is reinitialized with a fixed set of test
+   data each time the server is started.
+
+   root-dir is the runtime directory, and should be set to the top
+   directory of the source code repo. Access to logs and data is
+   calculated relative to this directory.
+
+   port is the port to listen on."
+  (init-app root-dir port)
+  (start-server))
+
+;; Ensure that the demo app starts on the login page.
+(define-easy-handler (home :uri "/") ()
+  (redirect "/login"))
+
+(defun insert-rows (table attributes rows)
+  "Insert the given set of rows into the given table. attributes gives
+   the column names and ordering of the row data."
+  (mapcar #'(lambda (vals)
+	      (insert-records :into table :attributes attributes :values vals))
+	  rows))
+
 (defmacro create-or-use-table (table &rest args)
+  "Creates the given table if necessary. Args are passed along to create-table."
   `(when (not (table-exists-p ,table)) (create-table ,table ,@args)))
 
 (defun create-test-tables ()
+  "Create all test tables used in the demo."
   (create-or-use-table "Users" 
 		       '(("UserID" integer :not-null :unique :primary-key)
 			 ("UserName" string)
@@ -106,7 +162,10 @@
 			 ("ShipToRef" integer)
 			 ("IsShipped" integer))))
 
+#.(locally-enable-sql-reader-syntax)
+
 (defun insert-test-data ()
+  "Insert test data into the database."
   (with-transaction ()
     (insert-rows "Users" '("UserID" "UserName" "Password") `((1 "test" ,(hash-password "11111111"))))
     (insert-rows "Reports"
@@ -129,12 +188,12 @@
 		 (9 2 "ListPrice" "Highest Price" "n" 16 nil 4.00 1 0 "<=" nil nil)
 		 (10 2 "Alias" "Alias" "t" nil nil 5.00 0 0 nil nil nil)
 		 (11 2 "InStock" "In Stock" "y" 0 nil 6.00 0 0 nil nil nil)
-		 (12 3 "TestID" "Test ID" "N" 0 nil 1.00 0 0 nil nil nil)
-		 (13 3 "TestText" "Test Text" "T" 0 nil 2.00 0 0 nil nil nil)
-		 (14 3 "TestNum" "Test Number" "N" 0 nil 3.00 0 0 nil nil nil)
-		 (15 3 "TestDate" "Test Date From" "D" 0 nil 4.00 0 0 ">=" nil nil)
-		 (16 3 "TestBool" "Test Boolean" "Y" 0 nil 5.00 0 0 nil nil nil)
-		 (17 3 "TestList" "Test List" "L" 0 nil 6.00 0 0 nil "AAA, BBB, CCC, DDD" nil)
+		 (12 3 "TestID" "Test ID" "n" 0 nil 1.00 0 0 nil nil nil)
+		 (13 3 "TestText" "Test Text" "t" 0 nil 2.00 0 0 nil nil nil)
+		 (14 3 "TestNum" "Test Number" "n" 0 nil 3.00 0 0 nil nil nil)
+		 (15 3 "TestDate" "Test Date From" "d" 0 nil 4.00 0 0 ">=" nil nil)
+		 (16 3 "TestBool" "Test Boolean" "y" 0 nil 5.00 0 0 nil nil nil)
+		 (17 3 "TestList" "Test List" "l" 0 nil 6.00 0 0 nil "AAA, BBB, CCC, DDD" nil)
 		 (18 4 "FirstMI" "First Name" "t" 0 nil 1.00 0 0 nil nil nil)
 		 (19 4 "LastName" "Last Name" "t" 0 nil 2.00 0 0 nil nil nil)
 		 (20 4 "OrderID" "Order ID" "n" 0 nil 3.00 0 0 nil nil nil)
@@ -144,7 +203,7 @@
 		 (24 4 "ListPrice" "Price From" "n" 10 nil 7.00 0 0 ">=" nil nil)
 		 (25 4 "ListPrice" "To" "n" 12 nil 8.00 1 0 "<=" nil nil)
 		 (26 5 "OrderRef" "OrderID" "n" 0 nil 1.00 0 0 nil nil nil)
-		 (29 3 "TestDate" "To" "D" 0 nil 4.50 1 0 "<=" nil nil)
+		 (29 3 "TestDate" "To" "d" 0 nil 4.50 1 0 "<=" nil nil)
 		 (30 2 "SupplierRef" "Supplier ID" "t" 0 nil 4.50 0 0 nil nil nil)))
     (insert-rows "UserFields" '("UserID" "RptItemID" "FldValue")
 	       '((1 10 "")
@@ -259,8 +318,10 @@
 		 (8 ,[function "datetime" "2001-06-04 00:00:00"] 10 1 0)
 		 (9 ,[function "datetime" "2001-06-04 00:00:00"] 13 13 0)))))
 
+#.(restore-sql-reader-syntax-state)
+
 (defun drop-test-tables ()
+  "Wipe the demo tables from the database."
   (dolist (tab '("Users" "Reports" "ReportCriteria" "UserFields" "Contacts" "Items" "OrderDetail" "Orders"))
     (when (table-exists-p tab) (drop-table tab))))
 
-#.(restore-sql-reader-syntax-state)

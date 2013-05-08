@@ -12,8 +12,10 @@
     ((:module "base" :pathname "src/lisp"
 	      :components
 	      ((:file "packages")
+	       (:file "controller" :depends-on ("packages" "util" "tags"))
 	       (:file "login" :depends-on ("packages" "util" "tags"))
-	       (:file "report" :depends-on ("packages" "util" "tags"))
+	       (:file "report" :depends-on ("packages" "util" "tags" "controller"))
+	       (:file "report-clear" :depends-on ("packages" "util" "tags" "controller"))
 	       (:file "report-list" :depends-on ("packages" "util" "tags"))
 	       (:file "start-site" :depends-on ("packages" "util"))
 	       (:file "tags" :depends-on ("packages" "util"))

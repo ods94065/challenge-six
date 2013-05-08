@@ -1,11 +1,15 @@
+;;;; login.lisp
+;;;; Implementation of /login and /logout URLs.
+
 (in-package :challenge-six)
 
-#.(locally-enable-sql-reader-syntax)
-
 (defun load-user-by-name (user-name)
-  (clsql:select [UserID] [Password] :from [Users] :where [= [UserName] user-name]))
+  "Loads the given user record from the database."
+  (query (format nil "SELECT UserID, Password FROM Users WHERE UserName = '~a'" user-name)))
 
 (defun validate-login (user-name in-pwd)
+  "Given a user name and password, check them against the database.
+   Returns the user ID if the login is valid, nil otherwise."
   (with-demo-db
     (let ((in-hash-pwd (hash-password in-pwd))
 	  (results (load-user-by-name user-name)))
@@ -14,14 +18,14 @@
 	  (when (string= db-hash-pwd in-hash-pwd)
 	    user-id))))))
 
-#.(restore-sql-reader-syntax-state)
-
 (defun do-logout ()
+  "Removes the current user session, logging the user out."
   (let ((s (start-session)))
     (remove-session s)))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (deftag-macro <login-page (user-name &optional error)
+    "A login page with user name prefilled and an optional error displayed."
     `(<simple-page "Login"
        (<:h3 "Login")
        (when ,error (<:p (<:em (<:ah ,error))))
@@ -30,8 +34,9 @@
 		    "Password: " (<password :name "pwd" :value "" :maxlength 40) (<:br)
 		    (<:submit :name "submit" :value "Login"))))))
 
-(define-easy-handler (login :uri "/login") ((user-name :real-name "name" :parameter-type 'xss-protected-string)
-					    (pwd :real-name "pwd"))
+(define-easy-handler (login :uri "/login") 
+    ((user-name :real-name "name" :parameter-type 'xss-protected-string)
+     (pwd :real-name "pwd"))
   (when (or (is-blank user-name) (is-blank pwd))
     (return-from login (html-to-string (<login-page user-name))))
   (let ((user-id (validate-login user-name pwd)))
