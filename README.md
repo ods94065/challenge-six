@@ -8,8 +8,8 @@ approach. Performance, compiled code size, code difficulty, and other
 considerations are not considered in this example.
 
 The exercise was proposed in
-[http://c2.com/cgi/wiki?ChallengeSixVersusFpDiscussion](the
-ChallengeSixVersusFpDiscussion on Ward Cunningham's Wiki).
+[the
+ChallengeSixVersusFpDiscussion on Ward Cunningham's Wiki](http://c2.com/cgi/wiki?ChallengeSixVersusFpDiscussion).
 
 ## Problem and Approach
 
