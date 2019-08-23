@@ -55,7 +55,7 @@ library for the database.
 
 The easiest way to run the example is:
 
-1. [http://www.quicklisp.org/beta/](Install Quicklisp) (by default
+1. [Install Quicklisp](http://www.quicklisp.org/beta/) (by default
    this installs into `~/quicklisp`)
 
 2. `cd ~/quicklisp/local-projects`
